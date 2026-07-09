@@ -9,8 +9,7 @@ EXPORT_DIR = DATA_DIR / "exported"
 DATASETS = {
     "16s": {"rep_seqs_qza": DATA_DIR / "16s_rep_seqs.qza", "table_qza": DATA_DIR / "16s_table.qza"},
     "its": {"rep_seqs_qza": DATA_DIR / "its_rep_seqs.qza", "table_qza": DATA_DIR / "its_table.qza"},
-    "its_amf": {"rep_seqs_qza": DATA_DIR / "its_amf_rep_seqs.qza", "table_qza": DATA_DIR / "its_amf_table.qza"},
-    "18s_amf": {"rep_seqs_qza": DATA_DIR / "18s_rep_seqs.qza", "table_qza": DATA_DIR / "18s_table.qza"},
+    "18s": {"rep_seqs_qza": DATA_DIR / "18s_rep_seqs.qza", "table_qza": DATA_DIR / "18s_table.qza"},
 }
 
 print("🔍 Exporting QIIME2 artifacts...\n")

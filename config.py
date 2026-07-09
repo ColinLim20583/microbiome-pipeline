@@ -50,8 +50,11 @@ DEFAULTS: dict[str, Any] = {
     # script iterates over these rather than a private hard-coded list.
     "markers": ["16s", "its", "18s"],
 
-    # AMF sub-markers derived from ITS / 18S using specialised classifiers.
-    "amf_markers": ["its_amf", "18s_amf"],
+    # AMF is handled by filtering the standard ITS/18S tables for Glomeromycota
+    # (scripts/filter_amf_table.py), so there are no separate AMF sub-markers.
+    # The old its_amf / 18s_amf marker path was never completed (DADA2 never
+    # produced those tables) and has been removed.
+    "amf_markers": [],
 
     # Vendor primer pairs (forward, reverse). "I" (inosine) is normalised to N.
     "primers": {

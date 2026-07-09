@@ -9,9 +9,7 @@ import re
 markers = {
     "16s": "../data/exported/16s",
     "its": "../data/exported/its",
-    "its_amf": "../data/exported/its_amf",
     "18s": "../data/exported/18s",
-    "18s_amf": "../data/exported/18s_amf",
 }
 
 taxonomy_qza_dir = Path("../data/classification")
@@ -22,9 +20,7 @@ output_excel.parent.mkdir(parents=True, exist_ok=True)
 TAXONOMY_NAME = {
     "16s": "16s",
     "its": "its",
-    "its_amf": "its",   # uses ITS taxonomy
     "18s": "18s",
-    "18s_amf": "18s",   # uses 18S taxonomy
 }
 
 rank_map = {

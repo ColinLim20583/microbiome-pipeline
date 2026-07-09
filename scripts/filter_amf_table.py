@@ -28,7 +28,7 @@ try:
     EXPORTED_DIR = cfg.EXPORTED_DIR
     AMF_TARGETS = [t.lower() for t in cfg.get("amf_target_taxa", [])]
     # Which markers can contain AMF (fungi / eukaryotes).
-    AMF_SOURCE_MARKERS = ["its", "18s", "its_amf", "18s_amf"]
+    AMF_SOURCE_MARKERS = ["its", "18s"]
 except Exception:
     EXPORTED_DIR = Path("../data/exported")
     AMF_TARGETS = [t.lower() for t in [
@@ -37,7 +37,7 @@ except Exception:
         "Gigaspora", "Acaulospora", "Diversispora", "Scutellospora",
         "Paraglomus", "Archaeospora", "Ambispora", "Septoglomus",
     ]]
-    AMF_SOURCE_MARKERS = ["its", "18s", "its_amf", "18s_amf"]
+    AMF_SOURCE_MARKERS = ["its", "18s"]
 
 OUTPUT_XLSX = EXPORTED_DIR / "amf_filtered_tables.xlsx"
 

@@ -11,8 +11,8 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 metadata_file = DATA_DIR / "metadata.tsv"
 
-# Keep exactly these markers
-markers = ["16s", "its", "its_amf", "18s"]
+# Keep exactly these markers (AMF handled separately by filter_amf_table.py)
+markers = ["16s", "its", "18s"]
 
 
 def run_cmd(cmd, label):

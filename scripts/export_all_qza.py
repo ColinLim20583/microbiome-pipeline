@@ -17,17 +17,9 @@ datasets = {
         "table": DATA_DIR / "its_table.qza",
         "rep_seqs": DATA_DIR / "its_rep_seqs.qza",
     },
-    "its_amf": {
-        "table": DATA_DIR / "its_amf_table.qza",
-        "rep_seqs": DATA_DIR / "its_amf_rep_seqs.qza",
-    },
     "18s": {
         "table": DATA_DIR / "18s_table.qza",
         "rep_seqs": DATA_DIR / "18s_rep_seqs.qza",
-    },
-    "18s_amf": {
-        "table": DATA_DIR / "18s_amf_table.qza",
-        "rep_seqs": DATA_DIR / "18s_amf_rep_seqs.qza",
     },
 }
 

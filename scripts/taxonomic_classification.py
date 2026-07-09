@@ -26,7 +26,7 @@ try:
 except Exception:
     cfg = None
     CLASSIFIER_DIR = BASE_DIR / "classifiers"
-    MARKER_LIST = ["16s", "its", "18s", "its_amf", "18s_amf"]
+    MARKER_LIST = ["16s", "its", "18s"]
     N_THREADS = "1"
     CONFIDENCE = "0.8"
     READ_ORIENT = "auto"

@@ -6,8 +6,7 @@ import subprocess
 markers = {
     "16s": "../data/exported/16s",
     "its": "../data/exported/its",
-    "its_amf": "../data/exported/its_amf",
-    "18s_amf": "../data/exported/18s_amf"
+    "18s": "../data/exported/18s",
 }
 output_dir = Path("../data/krona_charts")
 output_dir.mkdir(parents=True, exist_ok=True)
