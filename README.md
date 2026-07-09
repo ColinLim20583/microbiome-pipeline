@@ -15,18 +15,26 @@ values are hard-coded.
 ## Highlights
 
 - **Streamlit UI** (`streamlit_app.py`) — upload FASTQ, edit metadata, run the
-  pipeline step-by-step with live logs, browse results, and build the
-  interaction network. Replaces the old Flask app.
+  pipeline step-by-step with live logs, browse results, build the interaction
+  network, and generate taxon insights. Replaces the old Flask app.
 - **Evidence-based interaction network** (`scripts/network_analysis.py`) —
   compositionally-aware (CLR) co-occurrence network with p-values,
   Benjamini–Hochberg FDR control, effect-size thresholds, and every edge
   cross-referenced against a curated literature database
   (`scripts/microbial_interactions.json`).
+- **Taxon insights** (`scripts/taxon_insights.py`) — for the taxa in your data,
+  explains **why they may be high or low** (drivers), what that **means**,
+  candidate **interventions**, and **study citations**, from a general
+  literature-backed knowledge base (`scripts/taxon_insights.json`). Works with
+  any microbiome dataset, not just peanut.
 - **Nothing hard-coded** — markers, primers, DADA2 parameters, classifier files,
-  pipeline steps and network thresholds all live in `config.py` and can be
+  pipeline steps and analysis thresholds all live in `config.py` and can be
   overridden with `config.local.yaml` or `PEANUT_*` environment variables.
 - **Classifiers are discovered on disk** by keyword, so renaming a `.qza` file
   never silently breaks classification.
+- **Cloud-ready** — the analysis pages (interaction network, taxon insights,
+  results) deploy to Streamlit Community Cloud; the QIIME2 processing runs
+  locally.
 
 ---
 
@@ -35,18 +43,21 @@ values are hard-coded.
 ```
 config.py                      # central, dynamic configuration (edit here)
 streamlit_app.py               # Streamlit UI (run this)
-main.py                        # legacy Flask app (kept for reference)
 requirements.txt               # pip layer (app + analysis)
 environment.yml                # conda layer (QIIME2 / bioinformatics CLIs)
 REVIEW.md                      # code review notes & findings
+.streamlit/config.toml         # app theme (used locally and on Streamlit Cloud)
 scripts/
   network_analysis.py          # microbial interaction network + evidence base
-  microbial_interactions.json  # curated literature evidence database
+  microbial_interactions.json  # curated literature interaction database
+  taxon_insights.py            # why taxa are high/low + causes + solutions + evidence
+  taxon_insights.json          # general literature-backed taxon knowledge base
+  run_picrust2.py              # PICRUSt2 functional prediction (official CLI)
   priming.py                   # cutadapt primer trimming (config-driven)
   dada2_denoise.py             # DADA2 denoising (config-driven)
   taxonomic_classification.py  # classify-sklearn (classifiers auto-discovered)
   filter_amf_table.py          # AMF (Glomeromycota) filter
-  ... (fastqc, manifest, import, export, diversity, heatmap, krona, picrust2)
+  ... (fastqc, manifest, import, export, diversity, heatmap, krona)
 classifiers/                   # *.qza classifiers (git-ignored; large)
 data/                          # pipeline outputs (git-ignored)
 uploads/                       # uploaded FASTQ (git-ignored)
@@ -94,7 +105,7 @@ UNITE for ITS, MaarjAM for AMF). They are matched to markers by keyword in
 streamlit run streamlit_app.py
 ```
 Then work through the sidebar: **Upload & metadata → Run pipeline → Results →
-Interaction network**.
+Interaction network → Taxon insights**.
 
 ### Interaction network from the command line
 ```bash
@@ -104,6 +115,15 @@ python scripts/network_analysis.py \
 ```
 Outputs (edges with statistics + evidence, node hubs, summary JSON) are written
 to `data/exported/results/network/`.
+
+### Taxon insights from the command line
+```bash
+python scripts/taxon_insights.py \
+    --input data/exported/asv_tables_combined.xlsx --sheet 16S
+```
+For each taxon it reports role, why-high / why-low drivers, implication,
+interventions and citations. Unlike the network, this works with any number of
+samples (it uses relative abundance, not correlation).
 
 ---
 
@@ -130,6 +150,44 @@ the disclaimer in the JSON.
 
 To extend the evidence base, add entries to
 `scripts/microbial_interactions.json` (no code change needed).
+
+---
+
+## Taxon insights (why high/low → cause → solution → evidence)
+
+`scripts/taxon_insights.py` reads any ASV table, computes each taxon's mean
+relative abundance and prevalence, flags taxa as **High / Medium / Low**, and
+annotates them from a general knowledge base (`scripts/taxon_insights.json`):
+
+- **role** — what the taxon does ecologically,
+- **why high / why low** — the drivers (pH, salinity, nitrogen, organic carbon,
+  intercropping, moisture, …),
+- **implication** — what it means agronomically/ecologically,
+- **interventions** — candidate management actions,
+- **evidence** — study citations.
+
+The knowledge base is general (soil/rhizosphere microbiomes broadly) and
+extensible — add taxa or factors to the JSON with no code change.
+
+> ⚠️ These are general, literature-based **candidate explanations to interpret
+> and verify** — not automated causal proof for a specific soil. Statistically
+> proving which taxa differ between conditions still requires enough samples per
+> group.
+
+---
+
+## Deploying to Streamlit Community Cloud
+
+The analysis pages run online for free:
+
+1. Push the repo to GitHub.
+2. Go to https://share.streamlit.io → sign in with GitHub → **Create app**.
+3. Repository = your repo, branch = `main`, main file = `streamlit_app.py`.
+4. Deploy — installs `requirements.txt` and gives a public URL.
+
+The **Interaction network**, **Taxon insights** and **Results** pages work on the
+cloud. The **Run pipeline** page (QIIME2/DADA2/PICRUSt2) needs a local
+bioinformatics environment and is not expected to run on the free cloud.
 
 ---
 

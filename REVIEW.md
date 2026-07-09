@@ -149,3 +149,32 @@ with the Streamlit version.
 4. Decide whether to vendor or conda-install PICRUSt2 (§5), then push.
 5. Expand `microbial_interactions.json` with any interactions specific to your
    study system — it's designed to grow without code changes.
+
+---
+
+## 8. Update log (work completed after the initial review)
+
+- **PICRUSt2 redesigned to actually work ✅** — replaced the fragile hand-built
+  chain (`01–05_*`, `picrust2_balance`, `run_picrust2_stratified` with its
+  `sudo` swapfile, and the Galaxy version with a second exposed API key) with a
+  single `scripts/run_picrust2.py` that calls the official `picrust2_pipeline.py`
+  and writes a top-pathways summary. Deleted the 8 dead scripts + `galaxy.py`.
+- **Removed differential-abundance orphan `ancom.py`** (unwired, wrong path).
+- **Cleaned dead `its_amf` / `18s_amf` code branches** across export/diversity/
+  ASV-table/krona scripts; AMF is now handled only by `filter_amf_table.py`.
+- **FastQC case bug fixed** — markers read from config; ITS no longer skipped on
+  Linux.
+- **New: Taxon Insights ✅** — `scripts/taxon_insights.py` +
+  `scripts/taxon_insights.json` explain **why each taxon is high/low, what it
+  means, what to do, and the study evidence**, from a general (any-microbiome)
+  literature-backed knowledge base. Exposed as Streamlit page 5. Runs on any
+  sample count (relative abundance, not correlation).
+- **Repo trimmed & cloud-ready** — non-essential notes/old-code removed from
+  tracking; `.streamlit/config.toml` theme added; app verified to import without
+  QIIME2 so it deploys on Streamlit Community Cloud.
+
+### Key limitation to remember (data, not code)
+The current dataset has **only 2 samples per marker** (`FenceRow`, `WorkArea`).
+The interaction network needs ≥3 (ideally 15–20+) samples, so it correctly
+reports "not enough samples" until more are added. Taxon insights and taxonomy/
+composition views work now; interaction statistics need a larger sample set.
