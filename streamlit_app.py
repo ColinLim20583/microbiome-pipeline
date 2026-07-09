@@ -66,7 +66,7 @@ st.sidebar.title("🥜 Pipeline")
 page = st.sidebar.radio(
     "Section",
     ["1 - Upload & metadata", "2 - Run pipeline", "3 - Results",
-     "4 - Interaction network", "About"],
+     "4 - Interaction network", "5 - Taxon insights", "About"],
 )
 
 st.sidebar.markdown("---")
@@ -334,42 +334,136 @@ elif page.startswith("4"):
                 st.markdown(f"- {mr.get('citation','')} {('doi:' + mr['doi']) if mr.get('doi') else ''}")
 
 # =========================================================================== #
+# PAGE 5 - Taxon insights (why high/low + cause + solution + evidence)
+# =========================================================================== #
+elif page.startswith("5"):
+    st.title("🔎 Taxon insights — why high/low, causes, solutions, evidence")
+    st.write(
+        "For the taxa in your data, this explains their ecological role, **why they "
+        "may be high or low** (drivers), what that **means**, candidate **interventions**, "
+        "and **study citations** — from a general, literature-backed knowledge base."
+    )
+
+    from taxon_insights import generate_taxon_insights  # noqa: E402
+
+    combined = cfg.EXPORTED_DIR / "asv_tables_combined.xlsx"
+    uploaded = st.file_uploader("ASV / feature table (.xlsx, .tsv, .csv)", type=["xlsx", "tsv", "csv"], key="ti_up")
+    src_df = None
+    sheet = None
+    if uploaded is not None:
+        if uploaded.name.endswith(("xlsx", "xls")):
+            xls = pd.ExcelFile(uploaded)
+            sheet = st.selectbox("Sheet / marker", [s for s in xls.sheet_names if "TOP" not in s.upper()], key="ti_sheet")
+            src_df = xls.parse(sheet)
+        else:
+            sep = "\t" if uploaded.name.endswith("tsv") else ","
+            src_df = pd.read_csv(uploaded, sep=sep)
+    elif combined.exists():
+        xls = pd.ExcelFile(combined)
+        sheet = st.selectbox("Sheet / marker", [s for s in xls.sheet_names if "TOP" not in s.upper()], key="ti_sheet")
+        src_df = xls.parse(sheet)
+    else:
+        st.info("Upload a table or run the pipeline to generate one.")
+
+    if src_df is not None and st.button("🔎 Generate taxon insights"):
+        try:
+            md = cfg.DATA_DIR / "metadata.tsv"
+            res = generate_taxon_insights(
+                df=src_df, sheet=sheet,
+                metadata_path=str(md) if md.exists() else None,
+                kb_path=str(cfg.REFERENCE_DIR / "taxon_insights.json"),
+            )
+        except Exception as e:
+            st.error(f"Could not generate insights: {e}")
+            st.stop()
+
+        s = res["summary"]
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Samples", s["n_samples"])
+        c2.metric(f"Taxa ({s['headline_rank']})", s["n_taxa_at_headline_rank"])
+        c3.metric("Known taxa found", f"{s['n_kb_taxa_found']}/{s['n_kb_taxa_total']}")
+
+        insights = res["insights"]
+        found = insights[insights["status"] != "Absent"] if not insights.empty else pd.DataFrame()
+
+        if found.empty:
+            st.warning("None of the knowledge-base taxa were detected in this table.")
+        else:
+            st.subheader("Notable taxa — cause -> meaning -> solution -> evidence")
+            status_icon = {"High": "🔺", "Low": "🔻", "Medium": "▪️", "Absent": "·"}
+            for _, r in found.iterrows():
+                with st.expander(
+                    f"{status_icon.get(r['status'],'')} {r['taxon']} — {r['status']} "
+                    f"({r['mean_rel_abundance_pct']}% mean rel. abundance) · {r['group']}"
+                ):
+                    st.markdown(f"**Role:** {r['role']}")
+                    st.markdown(f"**Why it's HIGH:** {r['why_high']}")
+                    st.markdown(f"**Why it's LOW:** {r['why_low']}")
+                    st.markdown(f"**What it means:** {r['implication']}")
+                    st.markdown(f"**What you can do:** {r['interventions']}")
+                    if r["references"]:
+                        st.markdown("**Evidence:**")
+                        cites = r["references"].split(" | ")
+                        urls = (r["reference_urls"] or "").split(" | ")
+                        for i, cite in enumerate(cites):
+                            url = urls[i] if i < len(urls) and urls[i] else ""
+                            st.markdown(f"- [{cite}]({url})" if url else f"- {cite}")
+
+            st.download_button("Download insights (CSV)",
+                               data=found.drop(columns=["reference_urls"], errors="ignore").to_csv(index=False).encode(),
+                               file_name="taxon_insights.csv")
+
+        if not res["top_taxa"].empty:
+            st.subheader("Most abundant taxa in this sample")
+            st.dataframe(res["top_taxa"], use_container_width=True)
+
+        with st.expander("General drivers of microbiome abundance (with citations)"):
+            for f in res["factors"]:
+                st.markdown(f"**{f.get('factor','')}** — {f.get('summary','')}")
+                for ref in f.get("references", []):
+                    st.markdown(f"  - [{ref.get('citation','')}]({ref.get('url','')})")
+
+        st.caption("⚠️ " + res.get("disclaimer", ""))
+
+# =========================================================================== #
 # ABOUT
 # =========================================================================== #
 else:
     st.title("🥜 Peanut Microbiome Platform")
     st.markdown(
         """
-### From raw reads to evidence-based microbial interactions
+### From raw reads to evidence-based microbial insights
 
-A configurable **16S / ITS / 18S amplicon platform** that takes soil microbiome
-sequencing data through QIIME2 + DADA2 + PICRUSt2, and — uniquely — turns the
-result into a **statistically defensible microbial interaction network** where
-every predicted interaction carries **both the maths and the published evidence**.
+A configurable **16S / ITS / 18S amplicon platform** that takes microbiome
+sequencing data through QIIME2 + DADA2 + PICRUSt2, and turns the result into
+**evidence-based biological insight**:
+
+- a **microbial interaction network** (who associates with whom), and
+- **taxon insights** (why a microbe is high/low, what it means, what to do),
+
+with every claim backed by published literature.
 
 **What makes it different**
-- **Evidence-based interactions.** Co-occurrence edges are compositionally aware
-  (CLR), FDR-controlled (Benjamini–Hochberg), and each is cross-referenced to a
-  curated literature database — labelled *consistent / discordant / novel*
-  against what's published.
+- **Evidence-based, not just descriptive.** Interactions and abundance patterns
+  are annotated with drivers, interventions and citations.
 - **Fully dynamic, zero hard-coding.** Markers, primers, DADA2 parameters,
-  classifiers, pipeline steps and analysis thresholds all live in `config.py`
-  and can be overridden without touching code.
+  classifiers, pipeline steps and thresholds all live in `config.py`.
 - **Reproducible & transparent.** Every result surfaces the underlying numbers
-  (ρ, p, q, prevalence) and the methods used.
+  and the methods/references used.
 
 **How to use this app**
 1. **Upload & metadata** — add paired-end FASTQ per marker and sample metadata.
 2. **Run pipeline** — QIIME2 steps *(requires a local QIIME2 environment)*.
 3. **Results** — browse ASV tables and figures.
-4. **Interaction network** — build the evidence-annotated network from any ASV
-   table *(runs anywhere, including this hosted app)*.
+4. **Interaction network** — evidence-annotated co-occurrence network.
+5. **Taxon insights** — why taxa are high/low, causes, solutions, citations.
         """
     )
     st.info(
         "☁️ **Hosted demo note:** the QIIME2 processing steps need a local "
         "bioinformatics environment and won't run on the cloud. The **Interaction "
-        "Network** and **Results** pages run fully online — upload an ASV table to try them."
+        "Network**, **Taxon Insights** and **Results** pages run fully online — "
+        "upload an ASV table to try them."
     )
     st.subheader("Current configuration")
     st.json({

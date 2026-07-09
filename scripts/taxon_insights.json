@@ -1,0 +1,182 @@
+{
+  "schema_version": "1.0",
+  "description": "General-purpose, literature-backed knowledge base for interpreting soil/rhizosphere microbiome abundances. For notable taxa it records ecological role, what drives them up or down, what high/low means, candidate interventions, and citations. Used by scripts/taxon_insights.py to annotate high/low taxa detected in any amplicon dataset (not limited to peanut).",
+  "disclaimer": "These are GENERAL, literature-based candidate explanations to aid interpretation. They are NOT automated causal proof for a specific soil/dataset. Drivers are context-dependent; always confirm against the cited studies and your own metadata (pH, salinity, fertiliser, etc.).",
+  "factors": [
+    {"factor": "soil pH", "summary": "Often the single strongest driver of bacterial community composition. Acidobacteria/Chloroflyi shift strongly along pH; near-neutral pH usually maximises bacterial diversity.", "references": [{"citation": "Rousk et al. Soil bacterial community structure along a pH gradient (Craibstone). FEMS Microbiol Ecol", "url": "https://academic.oup.com/femsec/article/87/2/403/481719"}, {"citation": "Fertilization shapes bacterial community structure by alteration of soil pH. Front. Microbiol. 2017", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5513969/"}]},
+    {"factor": "nitrogen / fertilisation", "summary": "N addition favours fast-growing copiotrophs (Proteobacteria, Firmicutes, Bacteroidota) and suppresses oligotrophs (Acidobacteria, Chloroflexi, Verrucomicrobiota); high mineral N also downregulates symbiotic N fixation (Bradyrhizobium/diazotrophs).", "references": [{"citation": "Soil bacterial community altered by nutrient availability and pH after long-term nutrient addition. Front. Microbiol. 2024", "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11427344/"}, {"citation": "Long-term N fertilization and Bradyrhizobium inoculation on diazotroph community. 2024", "url": "https://www.sciencedirect.com/science/article/abs/pii/S0929139324005377"}]},
+    {"factor": "salinity / saline-alkali", "summary": "Salt stress reduces sensitive taxa and diversity while enriching halotolerant groups (many Bacillus, Halomonas, some Proteobacteria). Halotolerant PGPR and AMF inoculation can partially restore beneficial community structure and yield.", "references": [{"citation": "AMF increased peanut yield by changing rhizosphere microbial community in saline-alkali soil. 2023", "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10748501/"}, {"citation": "Halotolerant phosphate-solubilising Bacillus altitudinis AD13-4 improves saline-alkali rhizosphere. 2024", "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11171787/"}]},
+    {"factor": "organic carbon / amendments", "summary": "Higher labile carbon (compost, residues, root exudates) favours copiotrophs and many biocontrol PGPR; low-carbon soils favour oligotrophs.", "references": [{"citation": "Copiotroph vs oligotroph life-history classification of soil bacteria (review context).", "url": "https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2024.1455891/full"}]},
+    {"factor": "intercropping / diversification", "summary": "Crop diversification and legume intercropping change rhizodeposition (flavonoids, coumarins), often increasing beneficial N-fixers and PGPR relative to monoculture.", "references": [{"citation": "Legume rhizodeposition promotes nitrogen fixation under crop diversification. Nat. Commun. 2024", "url": "https://www.nature.com/articles/s41467-024-47159-x"}, {"citation": "Intercropping quinoa cultivars changes peanut rhizosphere microbes and yield in saline-alkali soil.", "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12753954/"}]}
+  ],
+  "taxa": [
+    {
+      "taxon": "Bradyrhizobium", "rank": "Genus", "group": "symbiotic N-fixer (diazotroph)",
+      "role": "Forms root nodules on legumes and fixes atmospheric N2 into plant-available nitrogen.",
+      "high_when": "Legume hosts present, low mineral-N soils, intercropping/diversification that raises flavonoid signalling, after rhizobial inoculation.",
+      "low_when": "High mineral nitrogen fertiliser (suppresses nodulation), non-legume systems, very saline or acidic soils.",
+      "implication": "High = strong biological N supply and reduced fertiliser need. Low in a legume system = poor nodulation / N-fixation.",
+      "interventions": "Inoculate with compatible Bradyrhizobium; reduce mineral-N inputs; use legume intercropping/rotation; correct extreme pH.",
+      "references": [
+        {"citation": "Long-term N fertilization and Bradyrhizobium inoculation on diazotroph community structure. 2024", "url": "https://www.sciencedirect.com/science/article/abs/pii/S0929139324005377"},
+        {"citation": "Maize-peanut intercropping increases Bradyrhizobium via flavonoids. Front. Plant Sci. 2022", "url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2022.957336/full"}
+      ]
+    },
+    {
+      "taxon": "Rhizobium", "rank": "Genus", "group": "symbiotic N-fixer / PGPR",
+      "role": "Legume-nodulating N-fixer; some strains also promote growth of non-legumes.",
+      "high_when": "Legume hosts, low-N soils, inoculation, cooperative fungal-bacterial assembly.",
+      "low_when": "High mineral N, hostile pH/salinity.",
+      "implication": "High = active symbiotic N fixation potential.",
+      "interventions": "Inoculation; reduce N fertiliser; manage pH.",
+      "references": [{"citation": "AMF-microbe co-occurrence networks show positive Rhizobium associations. Mycorrhiza 2026", "url": "https://link.springer.com/article/10.1007/s00572-026-01257-4"}]
+    },
+    {
+      "taxon": "Azospirillum", "rank": "Genus", "group": "free-living N-fixer / PGPR",
+      "role": "Associative diazotroph; produces phytohormones (auxins) that stimulate root growth.",
+      "high_when": "Root exudate-rich rhizosphere, moderate moisture, reduced-tillage.",
+      "low_when": "High mineral N, drought, disturbance.",
+      "implication": "High = growth-promotion and associative N contribution.",
+      "interventions": "Biofertiliser inoculation; organic amendments; conservation tillage.",
+      "references": [{"citation": "Legume rhizodeposition promotes N fixation by soil microbiota. Nat. Commun. 2024", "url": "https://www.nature.com/articles/s41467-024-47159-x"}]
+    },
+    {
+      "taxon": "Pseudomonas", "rank": "Genus", "group": "PGPR / biocontrol (copiotroph)",
+      "role": "Plant-growth-promoting rhizobacteria; suppress soil-borne pathogens via siderophores, antibiotics (2,4-DAPG) and induced systemic resistance.",
+      "high_when": "Carbon-rich rhizosphere, moderate moisture, after biocontrol inoculation.",
+      "low_when": "Low organic carbon, drought, fumigation/strong disturbance.",
+      "implication": "High = disease-suppressive potential and growth promotion. Low = weaker natural biocontrol.",
+      "interventions": "Inoculate biocontrol Pseudomonas; add organic matter; avoid broad-spectrum fumigants.",
+      "references": [{"citation": "Fluorescent Pseudomonas biocontrol of Fusarium (siderophore/antibiotic mechanisms).", "url": "https://www.ncbi.nlm.nih.gov/pmc/?term=Pseudomonas+Fusarium+biocontrol+siderophore"}]
+    },
+    {
+      "taxon": "Bacillus", "rank": "Genus", "group": "PGPR / biocontrol / halotolerant (copiotroph)",
+      "role": "Spore-forming PGPR; solubilise phosphate, produce lipopeptides (iturin, fengycin, surfactin), tolerate salt/heat; biocontrol of fungal pathogens including aflatoxigenic Aspergillus.",
+      "high_when": "Saline/alkaline or stressed soils (halotolerant), organic amendments, after inoculation.",
+      "low_when": "Very acidic, waterlogged, low-nutrient soils.",
+      "implication": "High = stress resilience, P solubilisation and biocontrol capacity. Useful marker of a suppressive, stress-tolerant community.",
+      "interventions": "Inoculate Bacillus biofertiliser/biocontrol; add compost; use for saline-alkali remediation.",
+      "references": [
+        {"citation": "Halotolerant Bacillus altitudinis AD13-4 enhances saline-alkali tolerance and rhizosphere community. 2024", "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11171787/"},
+        {"citation": "Bacillus co-inoculation induces resistance to fungal pathogens in legumes.", "url": "https://link.springer.com/chapter/10.1007/978-981-97-3473-3_3"}
+      ]
+    },
+    {
+      "taxon": "Streptomyces", "rank": "Genus", "group": "Actinobacteria / biocontrol",
+      "role": "Prolific antibiotic producers; suppress soil-borne pathogens and can enhance mycorrhization and nutrient cycling.",
+      "high_when": "Well-aerated, neutral-alkaline, organic-amended soils.",
+      "low_when": "Waterlogged, strongly acidic soils.",
+      "implication": "High = disease-suppressive, decomposer-rich community.",
+      "interventions": "Organic amendments; improve drainage/aeration; actinomycete inoculants.",
+      "references": [{"citation": "AMF and co-occurring Streptomyces networks in rhizosphere/bulk soil. PMC8914178", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8914178/"}]
+    },
+    {
+      "taxon": "Glomus", "rank": "Genus", "group": "arbuscular mycorrhizal fungus (AMF)",
+      "role": "Symbiotic fungus that extends hyphal networks improving P/water uptake and stress tolerance.",
+      "high_when": "Low-P soils, reduced tillage, mycorrhizal hosts, AMF inoculation.",
+      "low_when": "High phosphorus fertiliser, intensive tillage, fungicides, severe salinity.",
+      "implication": "High = strong mycorrhizal support (nutrients, stress buffering, yield). Low = missed symbiotic benefit.",
+      "interventions": "AMF inoculation; reduce P fertiliser and tillage; avoid unnecessary fungicides.",
+      "references": [{"citation": "AMF regulate rhizosphere microbiome to alleviate salinity and enhance yield. Front. Microbiol. 2025", "url": "https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2025.1739241/full"}]
+    },
+    {
+      "taxon": "Rhizophagus", "rank": "Genus", "group": "arbuscular mycorrhizal fungus (AMF)",
+      "role": "Widely used AMF (e.g. R. irregularis) improving nutrient uptake and abiotic-stress tolerance.",
+      "high_when": "Low-P, host present, inoculation, saline soils where AMF is selected for.",
+      "low_when": "High P, tillage, fungicides.",
+      "implication": "High = active mycorrhizal symbiosis and stress alleviation.",
+      "interventions": "AMF inoculation; lower P inputs; conservation tillage.",
+      "references": [{"citation": "The multifaceted roles of AMF in plant responses to salt, drought and cold.", "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9841720/"}]
+    },
+    {
+      "taxon": "Trichoderma", "rank": "Genus", "group": "biocontrol fungus",
+      "role": "Mycoparasitic fungus; antagonises pathogens (e.g. Aspergillus, Fusarium) and promotes plant growth.",
+      "high_when": "Organic-rich, well-aerated soils; after biocontrol application.",
+      "low_when": "Waterlogged, fumigated, low-organic soils.",
+      "implication": "High = strong fungal biocontrol capacity (e.g. against aflatoxigenic fungi).",
+      "interventions": "Apply Trichoderma bioinoculants; add organic matter.",
+      "references": [{"citation": "Trichoderma biocontrol of Aspergillus flavus / aflatoxin (review literature).", "url": "https://www.ncbi.nlm.nih.gov/pmc/?term=Trichoderma+Aspergillus+flavus+biocontrol"}]
+    },
+    {
+      "taxon": "Aspergillus", "rank": "Genus", "group": "potential pathogen / mycotoxin producer",
+      "role": "Includes Aspergillus flavus, which produces carcinogenic aflatoxins on crops such as peanut and maize.",
+      "high_when": "Drought/heat stress, damaged tissue, warm storage, low competitor/biocontrol load.",
+      "low_when": "Healthy competitive microbiome, adequate moisture, biocontrol (Trichoderma/Bacillus), proper drying/storage.",
+      "implication": "High = elevated spoilage and aflatoxin risk — a food-safety red flag.",
+      "interventions": "Biocontrol (atoxigenic strains, Trichoderma, Bacillus); irrigation to avoid drought stress; rapid drying and cool storage.",
+      "references": [{"citation": "Biocontrol of A. flavus and aflatoxin by antagonistic microbes (review).", "url": "https://www.ncbi.nlm.nih.gov/pmc/?term=Aspergillus+flavus+aflatoxin+biocontrol"}]
+    },
+    {
+      "taxon": "Fusarium", "rank": "Genus", "group": "plant pathogen",
+      "role": "Soil-borne fungal genus causing wilts and root rots in many crops.",
+      "high_when": "Monoculture, susceptible hosts, stressed/low-suppressiveness soils.",
+      "low_when": "Suppressive soils rich in Pseudomonas/Bacillus/Trichoderma, crop rotation.",
+      "implication": "High = disease pressure risk.",
+      "interventions": "Rotation; biocontrol (Pseudomonas, Trichoderma); resistant cultivars; improve soil suppressiveness.",
+      "references": [{"citation": "Suppression of Fusarium by fluorescent Pseudomonas in suppressive soils.", "url": "https://www.ncbi.nlm.nih.gov/pmc/?term=Fusarium+suppressive+soil+Pseudomonas"}]
+    },
+    {
+      "taxon": "Acidobacteria", "rank": "Phylum", "group": "oligotroph",
+      "role": "Slow-growing oligotrophs important in acidic/low-nutrient soils and carbon cycling.",
+      "high_when": "Low-nutrient, acidic, undisturbed soils.",
+      "low_when": "Nitrogen/nutrient addition, near-neutral high-fertility soils.",
+      "implication": "High = low-disturbance, low-nutrient conditions. A drop often signals nutrient enrichment/intensification.",
+      "interventions": "If undesired shift: moderate fertiliser inputs; maintain organic matter and stable pH.",
+      "references": [{"citation": "N addition inhibits oligotrophs (Acidobacteria) and favours copiotrophs. Front. Microbiol. 2024", "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11427344/"}]
+    },
+    {
+      "taxon": "Proteobacteria", "rank": "Phylum", "group": "copiotroph (broad)",
+      "role": "Very broad phylum; many fast-growing copiotrophs including numerous PGPR and some pathogens.",
+      "high_when": "High nutrients/organic carbon, rhizosphere, fertilisation.",
+      "low_when": "Very low-nutrient, undisturbed soils.",
+      "implication": "High relative abundance is common in fertile/rhizosphere soils; interpret at genus level for specifics.",
+      "interventions": "Interpret finer (genus); manage nutrients to balance copiotroph/oligotroph ratio.",
+      "references": [{"citation": "Nutrient addition favours copiotrophic Proteobacteria. Front. Microbiol. 2024", "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11427344/"}]
+    },
+    {
+      "taxon": "Actinobacteria", "rank": "Phylum", "group": "copiotroph / decomposer",
+      "role": "Decomposers and antibiotic producers (incl. Streptomyces); contribute to suppressiveness and C cycling.",
+      "high_when": "Organic-amended, well-aerated, neutral-alkaline soils.",
+      "low_when": "Waterlogged, strongly acidic soils.",
+      "implication": "High = active decomposition and disease-suppressive potential.",
+      "interventions": "Organic amendments; drainage/aeration; pH management.",
+      "references": [{"citation": "Copiotroph classification incl. Actinobacteria (review context).", "url": "https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2024.1455891/full"}]
+    },
+    {
+      "taxon": "Chloroflexi", "rank": "Phylum", "group": "oligotroph",
+      "role": "Slow-growing oligotrophs common in low-nutrient and deeper soils.",
+      "high_when": "Low-carbon, low-disturbance soils.",
+      "low_when": "Nutrient/N enrichment.",
+      "implication": "High = oligotrophic, low-input conditions.",
+      "interventions": "Maintain organic matter; avoid over-fertilisation if diversity is the goal.",
+      "references": [{"citation": "N addition inhibits oligotrophs incl. Chloroflexi. Front. Microbiol. 2024", "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11427344/"}]
+    },
+    {
+      "taxon": "Halomonas", "rank": "Genus", "group": "halophile / halotolerant",
+      "role": "Salt-adapted bacteria that thrive in saline environments.",
+      "high_when": "High salinity / saline-alkali soils.",
+      "low_when": "Non-saline soils.",
+      "implication": "High = strong salinity signal in the soil; a marker of salt stress.",
+      "interventions": "Manage salinity (leaching, gypsum for alkalinity, salt-tolerant crops); use halotolerant PGPR/AMF to support the crop.",
+      "references": [{"citation": "Halotolerant microbes and saline-alkali rhizosphere management.", "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10748501/"}]
+    },
+    {
+      "taxon": "Nitrospira", "rank": "Genus", "group": "nitrifier",
+      "role": "Nitrite- (and comammox) oxidising bacteria central to nitrification.",
+      "high_when": "Aerobic soils with ammonium supply, moderate pH.",
+      "low_when": "Anoxic/waterlogged soils, nitrification inhibitors, very low pH.",
+      "implication": "High = active nitrification (ammonium -> nitrate), which affects N availability and potential leaching.",
+      "interventions": "Use nitrification inhibitors to reduce N loss if leaching is a concern; manage aeration/moisture.",
+      "references": [{"citation": "Fertilisation and pH shape nitrifier communities. Front. Microbiol. 2017", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5513969/"}]
+    },
+    {
+      "taxon": "Sphingomonas", "rank": "Genus", "group": "PGPR / stress-tolerant",
+      "role": "Metabolically versatile bacteria; several strains promote growth and tolerate abiotic stress and degrade pollutants.",
+      "high_when": "Rhizosphere, stressed/contaminated soils, organic carbon.",
+      "low_when": "Very low-nutrient bulk soil.",
+      "implication": "High = stress-tolerant, potentially plant-beneficial community.",
+      "interventions": "Support with organic matter; relevant for stress/pollution remediation contexts.",
+      "references": [{"citation": "Rhizosphere PGPR and stress tolerance (saline-alkali context).", "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11171787/"}]
+    }
+  ]
+}
