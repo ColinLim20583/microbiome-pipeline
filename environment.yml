@@ -1,0 +1,46 @@
+# Conda environment for the FULL pipeline (QIIME2 bioinformatics stack).
+#
+# The QIIME2 amplicon distribution pins many of its own dependencies, so the
+# cleanest install is the official QIIME2 environment file for your platform,
+# then add the extras below. See:
+#   https://docs.qiime2.org/  (use the current amplicon distribution installer)
+#
+# Quick start (Linux/macOS):
+#   conda env create -f environment.yml
+#   conda activate peanut-microbiome
+#   # then install QIIME2 amplicon distribution into the same or a sibling env
+#
+# PICRUSt2 is best installed in its OWN conda env (it conflicts with QIIME2):
+#   conda create -n picrust2 -c bioconda -c conda-forge picrust2
+#
+name: peanut-microbiome
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.9
+  # --- bioinformatics CLIs used by the pipeline scripts ---
+  - cutadapt
+  - fastqc
+  - biom-format
+  - krona
+  # --- python analysis / app layer ---
+  - pandas
+  - numpy
+  - scipy
+  - networkx
+  - matplotlib
+  - seaborn
+  - openpyxl
+  - statsmodels
+  - pyyaml
+  - biopython
+  - h5py
+  - pip
+  - pip:
+      - streamlit>=1.30
+      - bioblend            # only needed for scripts/galaxy.py
+# Reminder: activate the QIIME2 amplicon distribution env for the QIIME steps
+# (import, dada2, feature-classifier, diversity, taxa). Install it separately
+# following the official QIIME2 docs for your OS/version.

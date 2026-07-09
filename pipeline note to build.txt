@@ -1,0 +1,70 @@
+🔬 1. Taxonomic Classification
+To identify the taxonomy of your ASVs:
+
+
+qiime feature-classifier classify-sklearn \
+  --i-classifier path/to/your_classifier.qza \
+  --i-reads data/16s_rep_seqs.qza \
+  --o-classification data/16s_taxonomy.qza
+
+Do this for each region (16S, ITS, 18S).
+Then visualize it:
+
+
+qiime metadata tabulate \
+  --m-input-file data/16s_taxonomy.qza \
+  --o-visualization data/16s_taxonomy.qzv
+You can use:
+
+SILVA or Greengenes for 16S
+
+UNITE for ITS (fungi)
+
+PR2 for 18S
+
+🌱 2. PICRUSt2 for Functional Prediction (for 16S)
+If you're interested in predicting metagenomic functions from 16S:
+
+Export rep-seqs and feature table to FASTA/BIOM
+
+Run PICRUSt2 (outside QIIME2) — it's not a QIIME2 plugin anymore.
+
+You’ll get:
+
+KO, EC, MetaCyc pathway predictions
+
+Traits/Phenotypes (optional)
+
+PICRUSt2 doc: https://github.com/picrust/picrust2/wiki
+
+🌿 3. AMF Detection (Arbuscular Mycorrhizal Fungi)
+For AMF, you usually want ITS or 18S, and a custom database.
+
+Option A: Use UNITE (for ITS)
+Look for genera such as:
+
+Rhizophagus, Funneliformis, Claroideoglomus, etc.
+
+Use taxonomy output and filter for known AMF taxa:
+
+qiime taxa filter-table \
+  --i-table data/its_table.qza \
+  --i-taxonomy data/its_taxonomy.qza \
+  --p-include "Rhizophagus,Funneliformis" \
+  --o-filtered-table data/amf_table.qza
+Option B: Use MaarjAM DB (custom for AMF)
+For higher AMF accuracy, you might want to:
+
+Classify ITS/18S sequences using a custom-trained classifier based on MaarjAM database (https://maarjam.botany.ut.ee/)
+
+You’d have to train it using QIIME 2’s fit-classifier-naive-bayes.
+
+📊 4. Diversity Analysis (Optional but Common)
+You may also want to run:
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny data/tree.qza \
+  --i-table data/16s_table.qza \
+  --p-sampling-depth 10000 \
+  --m-metadata-file data/combined_metadata.tsv \
+  --output-dir data/16s_core_metrics

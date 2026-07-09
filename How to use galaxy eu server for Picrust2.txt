@@ -1,0 +1,79 @@
+✅ Step-by-Step Reviewed & Annotated Instructions
+🧭 1. Upload Inputs
+Upload to https://usegalaxy.eu:
+
+cleaned-dna-sequences.fasta
+
+cleaned-feature-table.biom
+
+Run each test separately for:
+
+16S, ITS, ITS_AMF, 18S_AMF
+
+🔍 2. Tool: PICRUSt2 Full Pipeline
+Search: PICRUSt2 Full Pipeline
+
+⚙️ Section: Sequence Placement Options
+Parameter	Value	Recommendation
+Study sequences	cleaned-dna-sequences.fasta	Required
+Placement tool	EPA-ng	Best performance
+Reference data	For 16S: Prokaryotic 16S rRNA gene
+For ITS: Fungal ITS (only for epa-ng)
+For AMF/18S: Fungal 18S (only for epa-ng)	✅ Choose per marker
+Min alignment length	0.8 (default)	Leave as-is unless very short reads
+
+🧠 Section: Hidden State Prediction (HSP) Options
+Parameter	Value	Recommendation
+Trait table(s)	Default trait table(s)	✅ Always
+Pre-calculated trait table(s)	EC + KO (auto)	✅ Leave default
+Prediction method	Maximum parsimony (mp)	✅ For KO/EC prediction
+Transition cost weight	0.5	Default is good
+Calculate NSTI	Yes	✅ Leave ON for quality metrics
+
+🔬 Section: Metagenome Prediction Options
+Parameter	Value	Recommendation
+Sequence abundance table	cleaned-feature-table.biom	Required
+Table type	ASV	✅ Required if using DADA2/Deblur
+Min reads per ASV	1	OK, or raise to 10 to reduce noise
+Min samples per ASV	1	OK, raise to 2–3 for filtering rare ASVs
+Max NSTI	2.0	✅ Good for environmental data
+Stratified output	Yes	✅ Required for taxon-function mapping
+Wide-format stratified table	Yes	Optional; use only if memory is not a problem
+Skip normalization	No	✅ Leave as-is for accurate results
+
+🔗 Section: Infer Pathways
+Parameter	Value	16S	ITS/18S
+Infer pathways	Yes	✅ Yes	❌ No (irrelevant for fungi)
+Custom mapping	(empty)	✅ Leave empty	✅ Leave empty
+Run MinPath	Yes	✅ Yes	❌ Only if pathways are inferred
+Gap filling	Yes	✅ Yes	❌ Only if pathways are inferred
+Regroup gene families	Yes	✅ Yes	❌ Only if pathways are inferred
+Regroup map file	(empty)	✅ Default	✅ Default
+
+🧬 Section: Per-Genome Pathway Contributions
+Parameter	Value	16S	ITS/18S
+Calculate per-genome pathway abundances	Yes	✅ Yes	❌ No
+Table of normalized abundances	Required	✅ Yes	❌ Not needed
+Function abundances per sequence	Required	✅ Yes	❌ Not needed
+Wide-format stratified (deprecated)	No	✅ Keep OFF	✅ Keep OFF
+Calculate pathway coverages	No	❌ Optional	❌ Not applicable
+Functional DB	EC database (default)	✅ Yes	✅ Leave default
+
+🗂️ Section: Keep Intermediate Files
+Option	Use
+Default (empty)	Intermediate files are deleted. Saves space.
+Select folders to keep	Keeps internal files like trees, HSP tables, logs
+
+✅ Recommendation:
+
+Enable only if you are debugging or want to examine intermediate outputs.
+
+✅ Summary Recommendations
+Component	16S	ITS / ITS-AMF / 18S-AMF
+Pathway inference	✅ Yes	❌ No
+Stratified output	✅ Yes	✅ Yes
+Per-genome pathway abundance	✅ Yes	❌ No
+NSTI filtering	✅ Yes (2.0)	✅ Yes (2.0)
+Trait table	✅ EC + KO	✅ EC + KO
+Functional database	✅ EC default	✅ EC default
+Keep intermediate files	Optional	Optional

@@ -1,0 +1,5 @@
+./mount_qnap.sh
+cd /mnt/qnap
+ls
+conda activate qiime2-amplicon-2025.4
+

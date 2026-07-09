@@ -1,0 +1,128 @@
+{
+  "schema_version": "1.0",
+  "description": "Curated, literature-backed reference of known microbial interactions relevant to peanut (Arachis hypogaea) rhizosphere and soil systems. Used by scripts/network_analysis.py to annotate statistically detected co-occurrence edges with published evidence. Matching is done on taxon names at the configured taxonomic rank (case-insensitive substring match against either partner). Each entry records the expected direction of association so a detected correlation can be reported as CONSISTENT or DISCORDANT with the literature.",
+  "disclaimer": "These entries are curated candidate references to aid biological interpretation of statistical associations. A name-level match flags an edge as literature-supported for the analyst to verify against the cited source; it is NOT automated proof that the specific ASVs interact. Always confirm against the primary reference.",
+  "expected_sign_legend": {
+    "positive": "taxa expected to co-occur / mutualistic / helper relationship",
+    "negative": "taxa expected to exclude one another / antagonism / biocontrol",
+    "context": "sign depends on conditions (e.g. nutrient status, stress)"
+  },
+  "interactions": [
+    {
+      "id": "brady_peanut_nfix",
+      "taxon_a": "Bradyrhizobium",
+      "taxon_b": "Arachis",
+      "interaction_type": "symbiotic nitrogen fixation",
+      "expected_sign": "positive",
+      "mechanism": "Bradyrhizobium (e.g. B. arachidis) forms determinate root nodules on peanut and fixes atmospheric N2, exchanged for plant photosynthate; abundance tracks nodulation and flavonoid signalling.",
+      "host_context": "peanut rhizosphere / nodules",
+      "references": [
+        {"citation": "Bacteroid Development, Transcriptome, and Symbiotic Nitrogen-Fixing Comparison of Bradyrhizobium arachidis in Nodules of Peanut (Arachis hypogaea)", "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9927569/"},
+        {"citation": "Maize and peanut intercropping improves nitrogen accumulation by promoting flavonoids and Bradyrhizobium abundance in rhizosphere. Front. Plant Sci. 2022", "url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2022.957336/full"}
+      ]
+    },
+    {
+      "id": "amf_peanut_salinity",
+      "taxon_a": "Rhizophagus",
+      "taxon_b": "Arachis",
+      "interaction_type": "arbuscular mycorrhizal symbiosis",
+      "expected_sign": "positive",
+      "mechanism": "AMF (Glomeromycota) colonise peanut roots, extend hyphal networks that improve phosphorus/water uptake and alleviate salinity/drought stress; reshapes rhizosphere microbiome and increases yield.",
+      "host_context": "peanut rhizosphere under abiotic stress",
+      "references": [
+        {"citation": "Arbuscular mycorrhizal fungi regulate the peanut rhizosphere microbiome to alleviate salinity stress and enhance yield. Front. Microbiol. 2025", "url": "https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2025.1739241/full"},
+        {"citation": "The multifaceted roles of Arbuscular Mycorrhizal Fungi in peanut responses to salt, drought, and cold stress", "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9841720/"}
+      ]
+    },
+    {
+      "id": "amf_helper_bacteria",
+      "taxon_a": "Glomus",
+      "taxon_b": "Pseudomonas",
+      "interaction_type": "mycorrhiza helper bacteria (facilitation)",
+      "expected_sign": "positive",
+      "mechanism": "AMF hyphae positively associate with helper bacteria such as Pseudomonas, Rhizobium and Streptomyces that promote spore germination, hyphal growth and nutrient mobilisation in the hyphosphere.",
+      "host_context": "rhizosphere / hyphosphere",
+      "references": [
+        {"citation": "Nutrient-dependent cross-kingdom interactions in the hyphosphere of an arbuscular mycorrhizal fungus. ISME/PMC 2024", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10794670/"},
+        {"citation": "Co-occurrence networks reveal candidate AMF-microbe assemblages for generalist and crop-specific inocula. Mycorrhiza 2026", "url": "https://link.springer.com/article/10.1007/s00572-026-01257-4"}
+      ]
+    },
+    {
+      "id": "amf_streptomyces",
+      "taxon_a": "Funneliformis",
+      "taxon_b": "Streptomyces",
+      "interaction_type": "mycorrhiza helper / nutrient facilitation",
+      "expected_sign": "positive",
+      "mechanism": "Actinobacteria (Streptomyces) frequently co-occur with AMF and can enhance mycorrhization and suppress soil-borne pathogens via antibiotic production.",
+      "host_context": "rhizosphere",
+      "references": [
+        {"citation": "Long-Term Persistence of Arbuscular Mycorrhizal Fungi and Their Networks of Co-occurring Microbes. PMC8914178", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8914178/"}
+      ]
+    },
+    {
+      "id": "trichoderma_aspergillus",
+      "taxon_a": "Trichoderma",
+      "taxon_b": "Aspergillus",
+      "interaction_type": "fungal antagonism / biocontrol",
+      "expected_sign": "negative",
+      "mechanism": "Trichoderma species antagonise Aspergillus flavus (aflatoxin producer on peanut) through mycoparasitism, competition and antifungal metabolites, reducing pre-harvest aflatoxin contamination.",
+      "host_context": "peanut geocarposphere / soil",
+      "references": [
+        {"citation": "Biocontrol of Aspergillus flavus and aflatoxin in peanut by antagonistic Trichoderma spp. (review literature)", "url": "https://www.ncbi.nlm.nih.gov/pmc/?term=Trichoderma+Aspergillus+flavus+peanut+biocontrol"}
+      ]
+    },
+    {
+      "id": "bacillus_aspergillus",
+      "taxon_a": "Bacillus",
+      "taxon_b": "Aspergillus",
+      "interaction_type": "bacterial antagonism / aflatoxin biocontrol",
+      "expected_sign": "negative",
+      "mechanism": "Bacillus spp. (e.g. B. subtilis, B. velezensis) inhibit Aspergillus flavus growth and aflatoxin biosynthesis via lipopeptides (iturin, fengycin, surfactin) and competition; used as peanut biocontrol inoculants.",
+      "host_context": "peanut rhizosphere / pods",
+      "references": [
+        {"citation": "Peanut challenged with fungal pathogens shows induced systemic resistance when co-inoculated with Bacillus sp. CHEP5 and Bradyrhizobium sp.", "url": "https://link.springer.com/chapter/10.1007/978-981-97-3473-3_3"}
+      ]
+    },
+    {
+      "id": "pseudomonas_fusarium",
+      "taxon_a": "Pseudomonas",
+      "taxon_b": "Fusarium",
+      "interaction_type": "bacterial antagonism / biocontrol",
+      "expected_sign": "negative",
+      "mechanism": "Fluorescent Pseudomonas suppress Fusarium and other soil-borne pathogens through siderophore-mediated iron competition, 2,4-DAPG and other antibiotics, and induced systemic resistance.",
+      "host_context": "rhizosphere",
+      "references": [
+        {"citation": "Fluorescent Pseudomonas as biocontrol of Fusarium wilt (classical PGPR mechanism literature)", "url": "https://www.ncbi.nlm.nih.gov/pmc/?term=Pseudomonas+Fusarium+biocontrol+siderophore+rhizosphere"}
+      ]
+    },
+    {
+      "id": "bacillus_pseudomonas_pgpr",
+      "taxon_a": "Bacillus",
+      "taxon_b": "Pseudomonas",
+      "interaction_type": "co-occurring plant-growth-promoting rhizobacteria",
+      "expected_sign": "context",
+      "mechanism": "Bacillus and Pseudomonas are dominant PGPR guilds that can co-occur and synergise (nutrient solubilisation, ISR) but may also compete for niche/resources depending on carbon availability.",
+      "host_context": "rhizosphere",
+      "references": [
+        {"citation": "Legume rhizodeposition promotes nitrogen fixation by soil microbiota under crop diversification. Nat. Commun. 2024", "url": "https://www.nature.com/articles/s41467-024-47159-x"}
+      ]
+    },
+    {
+      "id": "rhizobium_serendipita_cooccur",
+      "taxon_a": "Rhizobium",
+      "taxon_b": "Serendipita",
+      "interaction_type": "beneficial fungal-bacterial co-occurrence",
+      "expected_sign": "positive",
+      "mechanism": "Root-associated beneficial fungi (e.g. Serendipita) positively associate with N-fixing and PGPR bacteria in co-occurrence networks, indicating cooperative rhizosphere assembly.",
+      "host_context": "root / rhizosphere",
+      "references": [
+        {"citation": "AMF-microbe co-occurrence networks show positive associations among Rhizobium, Pseudomonas, Streptomyces and Serendipita. Mycorrhiza 2026", "url": "https://link.springer.com/article/10.1007/s00572-026-01257-4"}
+      ]
+    }
+  ],
+  "method_references": [
+    {"topic": "SparCC / compositional correlation", "citation": "Friedman J, Alm EJ (2012) Inferring Correlation Networks from Genomic Survey Data. PLoS Comput Biol 8(9):e1002687", "doi": "10.1371/journal.pcbi.1002687", "url": "https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002687"},
+    {"topic": "False discovery rate control", "citation": "Benjamini Y, Hochberg Y (1995) Controlling the False Discovery Rate. J R Stat Soc B 57(1):289-300", "doi": "10.1111/j.2517-6161.1995.tb02031.x", "url": "https://www.jstor.org/stable/2346101"},
+    {"topic": "Pitfalls of network inference on compositional data", "citation": "Difficulty in inferring microbial community structure based on co-occurrence network approaches. BMC Bioinformatics 2019", "url": "https://link.springer.com/article/10.1186/s12859-019-2915-1"}
+  ]
+}

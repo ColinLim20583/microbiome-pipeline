@@ -1,0 +1,19 @@
+# Pip-installable dependencies for the Streamlit app + post-processing + the
+# microbial interaction network module.
+#
+# NOTE: qiime2, DADA2, cutadapt, biom, krona and fastqc are NOT reliably
+# pip-installable - they are bioinformatics tools installed via conda. Use
+# environment.yml for those. This file covers only the pure-Python layer that
+# `streamlit run streamlit_app.py` and scripts/network_analysis.py need.
+
+streamlit>=1.30
+pandas>=1.5
+numpy>=1.23
+scipy>=1.10
+networkx>=3.0
+matplotlib>=3.6
+seaborn>=0.12
+openpyxl>=3.1
+statsmodels>=0.14        # optional: FDR cross-checks / extra stats
+PyYAML>=6.0              # optional: config.local.yaml overrides
+biopython>=1.80
