@@ -224,6 +224,20 @@ elif page.startswith("4"):
     min_rho = c2.slider("Min |correlation|", 0.0, 1.0, float(n.get("min_abs_correlation", 0.60)), 0.05)
     fdr = c3.slider("FDR alpha (q)", 0.001, 0.20, float(n.get("fdr_alpha", 0.05)), 0.001)
 
+    # Show how many samples were detected so the requirement is clear up front.
+    if src_df is not None:
+        from network_analysis import detect_sample_columns  # noqa: E402
+        _n_samples = len(detect_sample_columns(src_df))
+        if _n_samples < 3:
+            st.warning(
+                f"⚠️ Only **{_n_samples} sample(s)** detected in this table. A co-occurrence "
+                "network correlates taxa *across samples*, so it needs at least **3** samples "
+                "(and realistically **15–20+** for statistically meaningful results). "
+                "Add more samples to enable this analysis — the tool is ready for a larger table."
+            )
+        else:
+            st.caption(f"Detected **{_n_samples}** samples in this table.")
+
     if src_df is not None and st.button("🔬 Build interaction network"):
         try:
             ref_path = cfg.REFERENCE_DIR / n.get("reference_db", "microbial_interactions.json")
@@ -234,6 +248,19 @@ elif page.startswith("4"):
                 rank=rank, min_prevalence=min_prev, correlation_method=method,
                 min_abs_correlation=min_rho, fdr_alpha=fdr, reference_db=str(ref_path),
             )
+        except ValueError as e:
+            msg = str(e)
+            if "sample column" in msg or "need >= 3" in msg:
+                st.info(
+                    "This dataset doesn't have enough samples for a co-occurrence network yet. "
+                    "You need at least 3 samples (ideally 15–20+). Once you have more samples "
+                    "in the ASV table, this page will produce the full evidence-annotated network."
+                )
+            elif "prevalence filter" in msg:
+                st.warning("Too few taxa passed the prevalence filter — lower 'Min prevalence' and try again.")
+            else:
+                st.error(f"Analysis could not run: {msg}")
+            st.stop()
         except Exception as e:
             st.error(f"Analysis failed: {e}")
             st.stop()
@@ -310,27 +337,44 @@ elif page.startswith("4"):
 # ABOUT
 # =========================================================================== #
 else:
-    st.title("About this pipeline")
+    st.title("🥜 Peanut Microbiome Platform")
     st.markdown(
         """
-This app runs a 16S / ITS / 18S amplicon pipeline (QIIME2 + DADA2 + PICRUSt2)
-and adds an **evidence-based microbial interaction network**.
+### From raw reads to evidence-based microbial interactions
 
-**Design principles**
-- Nothing is hard-coded: markers, primers, DADA2 parameters, classifier files,
-  pipeline steps and network thresholds all come from `config.py` and can be
-  overridden with `config.local.yaml` or `PEANUT_*` environment variables.
-- Classifiers are discovered on disk by keyword, so renaming a `.qza` never
-  silently breaks classification.
-- The interaction network is compositionally aware (CLR), FDR-controlled, and
-  each edge is cross-referenced to published literature.
+A configurable **16S / ITS / 18S amplicon platform** that takes soil microbiome
+sequencing data through QIIME2 + DADA2 + PICRUSt2, and — uniquely — turns the
+result into a **statistically defensible microbial interaction network** where
+every predicted interaction carries **both the maths and the published evidence**.
+
+**What makes it different**
+- **Evidence-based interactions.** Co-occurrence edges are compositionally aware
+  (CLR), FDR-controlled (Benjamini–Hochberg), and each is cross-referenced to a
+  curated literature database — labelled *consistent / discordant / novel*
+  against what's published.
+- **Fully dynamic, zero hard-coding.** Markers, primers, DADA2 parameters,
+  classifiers, pipeline steps and analysis thresholds all live in `config.py`
+  and can be overridden without touching code.
+- **Reproducible & transparent.** Every result surfaces the underlying numbers
+  (ρ, p, q, prevalence) and the methods used.
+
+**How to use this app**
+1. **Upload & metadata** — add paired-end FASTQ per marker and sample metadata.
+2. **Run pipeline** — QIIME2 steps *(requires a local QIIME2 environment)*.
+3. **Results** — browse ASV tables and figures.
+4. **Interaction network** — build the evidence-annotated network from any ASV
+   table *(runs anywhere, including this hosted app)*.
         """
+    )
+    st.info(
+        "☁️ **Hosted demo note:** the QIIME2 processing steps need a local "
+        "bioinformatics environment and won't run on the cloud. The **Interaction "
+        "Network** and **Results** pages run fully online — upload an ASV table to try them."
     )
     st.subheader("Current configuration")
     st.json({
         "markers": cfg.MARKERS,
-        "amf_markers": cfg.AMF_MARKERS,
         "network": cfg.NETWORK,
         "classifiers_found": {m: (str(cfg.discover_classifier(m)) if cfg.discover_classifier(m) else None)
-                              for m in cfg.MARKERS + cfg.AMF_MARKERS},
+                              for m in cfg.MARKERS},
     })

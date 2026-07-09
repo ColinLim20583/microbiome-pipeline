@@ -1,0 +1,10 @@
+# Streamlit theme for a clean, professional look (used on Streamlit Cloud too).
+[theme]
+primaryColor = "#2c7bb6"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f4f7fa"
+textColor = "#1a1a1a"
+font = "sans serif"
+
+[server]
+maxUploadSize = 200
