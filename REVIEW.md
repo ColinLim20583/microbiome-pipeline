@@ -1,180 +1,132 @@
-# Code Review — Peanut Microbiome Pipeline
+# Code Review & Change Log — Microbiome Pipeline
 
-Review of the pipeline against your three goals: **(1)** build/run on GitHub +
-Streamlit, **(2)** provide an *evidence base for microbial interaction*, and
-**(3)** remove hard-coding / make it dynamic. FASTQ handling was treated as
-out-of-scope per your note.
+This document records the review of the pipeline and the changes made to turn it
+into a clean, evidence-based, general-purpose microbiome platform. Goals:
+**(1)** run on GitHub + Streamlit, **(2)** provide an evidence base for microbial
+interactions and abundance, and **(3)** remove hard-coding / make it dynamic.
 
-Legend: ✅ fixed in this pass · 🟡 improved, needs your input · 🔴 flagged, action
-recommended.
+Legend: ✅ done · 🟡 improved / optional follow-up · 🔴 was a real problem.
 
 ---
 
-## 1. Biggest gap: there was no microbial interaction analysis at all ✅
+## 1. Evidence layers added (the core value)
 
-The 17-step pipeline produced taxonomy, diversity, heatmaps, Krona and PICRUSt2,
-but **nothing computed or evidenced microbial interactions**. That is the core
-of your request, so it was built from scratch:
+The original pipeline produced taxonomy, diversity, heatmaps, Krona and PICRUSt2,
+but **nothing interpreted the results**. Two evidence-based layers were built:
 
-- **`scripts/network_analysis.py`** — a compositionally-aware co-occurrence
-  network with real statistics and a literature evidence base.
-- **`scripts/microbial_interactions.json`** — a curated, citable reference DB of
-  peanut/rhizosphere interactions (Bradyrhizobium–peanut N-fixation, AMF
-  symbiosis, mycorrhiza helper bacteria, Trichoderma/Bacillus vs *Aspergillus
-  flavus*, Pseudomonas vs *Fusarium*, …).
+- **Microbial interaction network** — `scripts/network_analysis.py` +
+  `scripts/microbial_interactions.json`. A compositionally-aware co-occurrence
+  network (CLR → Spearman → p-values → Benjamini–Hochberg FDR → effect-size
+  threshold) where every significant edge is cross-referenced to published
+  literature and labelled `CONSISTENT` / `DISCORDANT` / `CONTEXT` / `NOVEL`.
+  Validated numerically: ρ and p-values match `scipy.stats.spearmanr` exactly,
+  and BH q-values match `statsmodels` to 1e-16.
 
-**How it makes interactions evidence-based (all three senses you asked for):**
+- **Taxon insights** — `scripts/taxon_insights.py` +
+  `scripts/taxon_insights.json`. For the taxa in a dataset it explains **why they
+  are high or low** (drivers such as pH, salinity, nitrogen, organic carbon),
+  what that **means**, candidate **interventions**, and **study citations**. This
+  runs at any sample size (relative abundance, not correlation).
 
-| Your ask | How it's delivered |
+Both knowledge bases are **general** (soil/rhizosphere microbiomes broadly) and
+extensible — add entries to the JSON with no code change. They include some
+example organisms relevant to legume/peanut systems, but are not limited to them.
+
+> ⚠️ Literature matches are **candidate annotations to verify** against the cited
+> source — not automated causal proof for a specific dataset.
+
+---
+
+## 2. Hard-coding removed → centralised in `config.py` ✅
+
+Values that were scattered/duplicated across scripts now live in one `config.py`
+(overridable via `config.local.yaml` or `PEANUT_*` env vars):
+
+| Was hard-coded | Now |
 |---|---|
-| Statistical rigor | CLR transform → Spearman → p-values → **Benjamini–Hochberg FDR** → effect-size threshold. Avoids the spurious-correlation trap of compositional data (Friedman & Alm 2012). |
-| Literature citations | Every significant edge is cross-referenced to the JSON DB and labelled `CONSISTENT` / `DISCORDANT` / `CONTEXT` / `NOVEL`, with mechanism + citations. |
-| Show the math/data | Output table surfaces ρ, p, q, co-prevalence, sample count per edge; a "Method & references" panel exposes the parameters used. |
+| Primer sequences | `config.primers` |
+| DADA2 truncation lengths / max-EE / threads | `config.dada2` (editable in UI) |
+| Classifier filenames | **discovered on disk** via `config.discover_classifier` |
+| Marker lists | `config.markers` |
+| Cutadapt options | `config.cutadapt` |
+| AMF target taxa | `config.amf_target_taxa` |
+| Pipeline step order | `config.pipeline_steps` |
+| Network / analysis thresholds | `config.network` |
 
-Validated numerically: ρ and p-values match `scipy.stats.spearmanr` exactly, and
-BH q-values match `statsmodels` to 1e-16. A planted positive symbiosis
-(ρ≈+0.93) and negative antagonism (ρ≈−0.78) were both correctly detected and
-labelled `SUPPORTED/CONSISTENT`.
-
-> ⚠️ The literature matches are *candidate* annotations at genus level — a name
-> match flags an edge for you to verify against the cited paper; it is not proof
-> that the specific ASVs interact. This caveat is stated in the JSON and UI.
-
----
-
-## 2. Hard-coding removed → centralised in `config.py` ✅ / 🟡
-
-Values were scattered and duplicated across scripts. They now live in one
-`config.py` (overridable via `config.local.yaml` or `PEANUT_*` env vars).
-
-| Was hard-coded | Where | Now |
-|---|---|---|
-| Primer sequences | `priming.py` | `config.primers` ✅ |
-| DADA2 truncation lengths, max-EE, threads | `dada2_denoise.py` | `config.dada2` ✅ (editable in UI) |
-| Classifier filenames | `taxonomic_classification.py` | **discovered on disk** via `config.discover_classifier` ✅ |
-| Marker list `["16s","its","18s"]` | many scripts | `config.markers` ✅ (refactored the key scripts) |
-| Cutadapt error rate / options | `priming.py` | `config.cutadapt` ✅ |
-| AMF target taxa | (missing) | `config.amf_target_taxa` ✅ |
-| Pipeline step order | `main.py` | `config.pipeline_steps` ✅ |
-| Network thresholds | (n/a) | `config.network` ✅ |
-
-🟡 Remaining scripts (`import_qiime2.py`, `export_all_qza.py`, `export_qiime2.py`,
-`run_qiime_diversity.py`, `generate_asv_table.py`, `krona_chart.py`, the
-`generate_functional_*`/`picrust2` helpers, and the `01–05_*` placement scripts)
-still contain literal `../data/...` paths and marker lists. They work, but for
-full consistency they should import from `config.py` the same way — a
-mechanical follow-up. Say the word and I'll convert them too.
+🟡 A few remaining scripts still use literal `../data/...` paths; they work but
+could import from `config.py` for full consistency.
 
 ---
 
-## 3. Real bugs found
+## 3. Real bugs fixed 🔴 → ✅
 
-### 3.1 `filter_amf_table.py` was a copy-paste of `generate_asv_table.py` 🔴→✅
-The two files were **byte-for-byte identical**. The AMF-filtering step (main.py
-step 11) therefore did nothing — it just rebuilt the ASV table. Rewritten to
-actually filter features whose taxonomy matches `config.amf_target_taxa`
-(Glomeromycota lineage) and emit per-marker + combined AMF tables.
-
-### 3.2 Classifier filenames didn't match the files on disk 🔴→✅
-`taxonomic_classification.py` referenced e.g.
-`silva-138.1-16s-v3v4-nb-classifier.qza`, `unite-its1-nb-classifier.qza`,
-`silva-138.1-18s-V7V8-nb-classifier.qza` — **none of which exist** in
-`classifiers/` (which actually holds `silva-138-99-nb-classifier.qza`,
-`maarjam_its_classifier.qza`, `maarjam_18s_classifier.qza`). Every sklearn
-classification would have skipped with "missing classifier". Now classifiers are
-**discovered by keyword**, so the present files are picked up automatically.
-
-### 3.3 Heatmap sample detection was brittle 🔴→✅
-`heatmap.py` selected sample columns with
-`col.lower().startswith("sample")`. Any sample not literally named `sample*`
-(e.g. `P1`, `T3_rep2`) would be silently dropped and the heatmap would be empty
-or wrong — directly against your "must be dynamic" requirement. Replaced with
-numeric-column detection that ignores taxonomy/ID columns and makes no
-assumption about names.
-
-### 3.4 `18s_amf` reused the wrong rep-seqs 🟡
-In the original config, `18s_amf` pointed at `18s_rep_seqs.qza` with a comment
-admitting it may be wrong. Kept the mapping explicit in `REP_SEQS_FOR` so it's
-obvious and easy to correct if you do have separate AMF rep-seqs.
+- **`filter_amf_table.py` was a byte-for-byte copy of `generate_asv_table.py`** —
+  the AMF-filtering step did nothing. Rewritten to actually filter features whose
+  taxonomy matches `config.amf_target_taxa`.
+- **Classifier filenames didn't match the files on disk** — every sklearn
+  classification would have skipped. Classifiers are now **discovered by
+  keyword**, so present files are picked up automatically.
+- **Heatmap sample detection was brittle** (`col.startswith("sample")`) — samples
+  not named `sample*` were silently dropped. Replaced with numeric-column
+  detection that makes no assumption about names.
+- **FastQC case bug** — hard-coded `"ITS"` folder was never found on Linux; now
+  reads markers from config and matches case-insensitively.
 
 ---
 
-## 4. Security & secrets 🔴→✅
+## 4. PICRUSt2 redesigned to actually work ✅
 
-- `scripts/galaxy.py` committed a **live-looking Galaxy API key**
-  (`26e8755e…`) and `http://localhost:8080`. Now reads `GALAXY_URL` /
-  `GALAXY_API_KEY` from the environment and errors if unset. **Rotate that key**
-  if it was ever real.
-- `main.py` (Flask) used `app.secret_key = "supersecret"`. The Streamlit app
-  doesn't need it; if you keep Flask, move it to an env var.
+The original had three fragile, non-working approaches: a hand-built placement
+chain (`01–05_*`, `picrust2_balance`), a `run_picrust2_stratified.py` that called
+`sudo` to build a swapfile, and a Galaxy version with a hard-coded API key. All
+replaced by a single `scripts/run_picrust2.py` that calls the official
+`picrust2_pipeline.py` and writes a top-pathways summary. The 8 dead scripts +
+`galaxy.py` were deleted.
 
 ---
 
-## 5. GitHub readiness 🔴→✅
+## 5. Cleanup ✅
 
-- **No root `.gitignore`** existed (only a PyCharm one under `.idea/`). Added a
-  proper one that excludes FASTQ, `data/`, `uploads/`, `*.qza/qzv/biom`, and
-  `__pycache__/`.
-- **`picrust2/` contains its own `.git`** (a full nested repo, ~hundreds of
-  files). Committed as-is it becomes an embedded repo/gitlink and breaks
-  `git add`. It's now git-ignored; install PICRUSt2 via conda instead. If you
-  must vendor it, `rm -rf picrust2/.git` first.
-- A committed `scripts/__pycache__/*.pyc` was present — now ignored.
-- **`requirements.txt` listed non-pip packages** (`qiime2`, `krona`, `fastqc`).
-  These are conda/bioinformatics tools and `pip install` would fail. Split into
-  a realistic `requirements.txt` (pip layer) + `environment.yml` (conda layer).
+- Removed the orphan `ancom.py` (unwired, wrong path).
+- Removed dead `its_amf` / `18s_amf` code branches; AMF is handled only by
+  `filter_amf_table.py`.
+- Removed the legacy Flask app (`main.py`, `templates/`) — replaced by Streamlit.
+- Removed personal notes and an old duplicate `readme.txt`.
+- Added a root `.gitignore` excluding FASTQ, `data/`, `uploads/`, `*.qza/qzv/biom`,
+  `classifiers/`, vendored `picrust2/`, and `__pycache__/`.
+- Split dependencies: `requirements.txt` (pip / app) + `environment.yml` (conda /
+  QIIME2). The repo now tracks only ~28 files (~300 KB); multi-GB data stays local.
+- No secrets in the repo — scripts read any credentials from the environment.
 
 ---
 
 ## 6. Architecture: Flask → Streamlit ✅
 
-The Flask app (`main.py`) drove the pipeline by chaining HTTP redirects, one per
-step, running scripts via `subprocess`. That's fragile (a long DADA2 step blocks
-a request; errors dump raw HTML). Replaced with `streamlit_app.py`:
-
-- dynamic marker tabs and metadata editor (grid),
-- step selection + live logs + progress bar,
-- results browser, and the interaction-network page.
-
-`main.py` is left in place for reference; you can delete it once you're happy
-with the Streamlit version.
+The old Flask app drove the pipeline via chained HTTP redirects (fragile; long
+steps blocked requests). Replaced by `streamlit_app.py` with five sections:
+Upload & metadata → Run pipeline (live logs) → Results → Interaction network →
+Taxon insights. Verified to import without QIIME2, so the analysis pages deploy
+on Streamlit Community Cloud.
 
 ---
 
-## 7. Suggested next steps
+## 7. Key limitation to remember (data, not code)
 
-1. Point me at the remaining scripts (§2 🟡) to finish the config migration.
-2. Confirm the `18s_amf` rep-seqs mapping (§3.4).
-3. Rotate the Galaxy API key (§4).
-4. Decide whether to vendor or conda-install PICRUSt2 (§5), then push.
-5. Expand `microbial_interactions.json` with any interactions specific to your
-   study system — it's designed to grow without code changes.
+A co-occurrence interaction network correlates taxa **across samples**, so it
+needs **≥ 3** samples and realistically **15–20+** for meaningful results. The
+example dataset here has only 2 samples per marker, so the network correctly
+reports "not enough samples" rather than fabricating correlations. Taxonomy,
+composition and **taxon insights** work at any sample size; interaction
+statistics need a larger sample set.
 
 ---
 
-## 8. Update log (work completed after the initial review)
+## 8. Optional follow-ups
 
-- **PICRUSt2 redesigned to actually work ✅** — replaced the fragile hand-built
-  chain (`01–05_*`, `picrust2_balance`, `run_picrust2_stratified` with its
-  `sudo` swapfile, and the Galaxy version with a second exposed API key) with a
-  single `scripts/run_picrust2.py` that calls the official `picrust2_pipeline.py`
-  and writes a top-pathways summary. Deleted the 8 dead scripts + `galaxy.py`.
-- **Removed differential-abundance orphan `ancom.py`** (unwired, wrong path).
-- **Cleaned dead `its_amf` / `18s_amf` code branches** across export/diversity/
-  ASV-table/krona scripts; AMF is now handled only by `filter_amf_table.py`.
-- **FastQC case bug fixed** — markers read from config; ITS no longer skipped on
-  Linux.
-- **New: Taxon Insights ✅** — `scripts/taxon_insights.py` +
-  `scripts/taxon_insights.json` explain **why each taxon is high/low, what it
-  means, what to do, and the study evidence**, from a general (any-microbiome)
-  literature-backed knowledge base. Exposed as Streamlit page 5. Runs on any
-  sample count (relative abundance, not correlation).
-- **Repo trimmed & cloud-ready** — non-essential notes/old-code removed from
-  tracking; `.streamlit/config.toml` theme added; app verified to import without
-  QIIME2 so it deploys on Streamlit Community Cloud.
-
-### Key limitation to remember (data, not code)
-The current dataset has **only 2 samples per marker** (`FenceRow`, `WorkArea`).
-The interaction network needs ≥3 (ideally 15–20+) samples, so it correctly
-reports "not enough samples" until more are added. Taxon insights and taxonomy/
-composition views work now; interaction statistics need a larger sample set.
+1. Finish migrating remaining scripts to read paths from `config.py`.
+2. Rename the conda env / env-var prefix from peanut-specific names to generic
+   ones (`microbiome`, `MB_`) if desired — touches `config.py` + `environment.yml`.
+3. Expand `microbial_interactions.json` and `taxon_insights.json` with taxa /
+   drivers specific to your study system (no code change needed).
+4. Move the git working copy off the network drive to local disk (network mounts
+   corrupt the git index).
