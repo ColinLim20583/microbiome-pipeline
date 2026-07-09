@@ -127,6 +127,7 @@ DEFAULTS: dict[str, Any] = {
         ["heatmap.py", "Heatmap & barplots"],
         ["krona_chart.py", "Krona chart"],
         ["export_qiime2.py", "Export for PICRUSt2"],
+        ["run_picrust2.py", "PICRUSt2 functional prediction (needs picrust2 env)"],
         ["generate_functional_order.py", "Functional order (TND)"],
         ["network_analysis.py", "Microbial interaction network"],
     ],

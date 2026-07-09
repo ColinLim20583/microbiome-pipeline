@@ -59,6 +59,16 @@ config.local.yaml
 *.key
 
 # ------------------------------------------------------------------ #
+# Non-essential: superseded/scratch scripts and personal notes.
+#   These are not needed to run the pipeline, so keep them out of the repo.
+# ------------------------------------------------------------------ #
+scripts/old code do not delete/
+how to fetch data from NCBI
+how to mount drive.txt
+How to use galaxy eu server for Picrust2.txt
+pipeline note to build.txt
+
+# ------------------------------------------------------------------ #
 # OS cruft
 # ------------------------------------------------------------------ #
 .DS_Store

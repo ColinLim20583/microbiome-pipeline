@@ -1,2 +1,0 @@
-To download fastq: prefetch DRR826532
-then use fastdump to split pair end data: fasterq-dump --split-files --threads 4 DRR826532
