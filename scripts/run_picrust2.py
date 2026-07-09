@@ -1,26 +1,30 @@
 """
-PICRUSt2 functional prediction — clean, local, single-command version.
+PICRUSt2 functional prediction — one clean, working command.
 
-This replaces the previous approaches, which did not work reliably:
-  * the Galaxy-EU version (bioblend) embedded a hard-coded API key and depended
-    on a remote server + exact tool names;
-  * the "stratified" version called `sudo` to build a swapfile (hangs with no
-    terminal) and relied on the vendored picrust2/ source tree.
+This single script replaces the entire hand-built PICRUSt2 chain that used to
+live here (01_align_seqs, 02_place_with_epa, 03_gappa_to_newick,
+04_make_placed_tree, 05_Run_Hsp, picrust2_balance, run_picrust2_stratified,
+and the Galaxy version). All of those manually reconstructed — and fragile-ly —
+what the official `picrust2_pipeline.py` does in a single validated call:
+sequence placement → hidden-state prediction → metagenome inference →
+pathway abundance.
 
-Here we call the OFFICIAL `picrust2_pipeline.py` command, which runs sequence
-placement, hidden-state prediction, metagenome inference and pathway abundance
-in one step. Install it in its own conda env (it conflicts with QIIME2):
+Install PICRUSt2 in its OWN conda env (it conflicts with QIIME2):
 
     conda create -n picrust2 -c bioconda -c conda-forge picrust2
     conda activate picrust2
-    python scripts/run_picrust2.py            # or run this whole script in that env
+    python scripts/run_picrust2.py
 
-Inputs (produced by the export step) per marker under data/exported/<marker>/:
-    rep_seqs.fna            (representative sequences)
-    feature-table.biom      (feature/ASV table)
+Inputs (produced by the export step) per marker in data/exported/<marker>/:
+    rep_seqs.fna         representative sequences
+    feature-table.biom   feature/ASV table
 
-By default only 16S is processed (PICRUSt2 is validated for prokaryotic 16S).
-Set PEANUT_PICRUST2_MARKERS="16s,18s" to override.
+Outputs in data/exported/<marker>/picrust2_output/:
+    KO_metagenome_out/  EC_metagenome_out/  pathways_out/   (all *.tsv.gz)
+    plus a human-readable top_pathways_summary.csv + .png written by this script.
+
+PICRUSt2 is only biologically valid for prokaryotic 16S, so only 16S runs by
+default. Override with  PEANUT_PICRUST2_MARKERS="16s,18s".
 """
 from __future__ import annotations
 
@@ -38,10 +42,9 @@ try:
 except Exception:
     EXPORTED_DIR = BASE_DIR / "data" / "exported"
 
-# PICRUSt2 is only biologically valid for 16S by default.
 MARKERS = os.environ.get("PEANUT_PICRUST2_MARKERS", "16s").split(",")
 THREADS = os.environ.get("PEANUT_PICRUST2_THREADS", "2")
-
+TOP_N = int(os.environ.get("PEANUT_PICRUST2_TOP_N", "25"))
 PICRUST2_CMD = "picrust2_pipeline.py"
 
 
@@ -49,10 +52,44 @@ def have_picrust2() -> bool:
     return shutil.which(PICRUST2_CMD) is not None
 
 
+def summarize_pathways(out_dir: Path, marker: str) -> None:
+    """Write a human-readable top-pathways summary (CSV + bar plot)."""
+    path_abun = out_dir / "pathways_out" / "path_abun_unstrat.tsv.gz"
+    if not path_abun.exists():
+        print(f"   (no pathways_out/path_abun_unstrat.tsv.gz to summarize for {marker.upper()})")
+        return
+    try:
+        import pandas as pd
+        df = pd.read_csv(path_abun, sep="\t", index_col=0)
+        totals = df.sum(axis=1).sort_values(ascending=False)
+        top = totals.head(TOP_N).rename("total_predicted_abundance").reset_index()
+        top.columns = ["pathway", "total_predicted_abundance"]
+        csv_fp = out_dir / "top_pathways_summary.csv"
+        top.to_csv(csv_fp, index=False)
+        print(f"   📄 wrote {csv_fp.name} (top {TOP_N} predicted MetaCyc pathways)")
+
+        try:
+            import matplotlib
+            matplotlib.use("Agg")
+            import matplotlib.pyplot as plt
+            fig, ax = plt.subplots(figsize=(9, max(4, 0.3 * len(top))))
+            ax.barh(top["pathway"][::-1], top["total_predicted_abundance"][::-1], color="#2c7bb6")
+            ax.set_xlabel("Total predicted abundance")
+            ax.set_title(f"Top {TOP_N} predicted pathways ({marker.upper()})")
+            fig.tight_layout()
+            png_fp = out_dir / "top_pathways_summary.png"
+            fig.savefig(png_fp, dpi=200)
+            plt.close(fig)
+            print(f"   📈 wrote {png_fp.name}")
+        except Exception as e:
+            print(f"   (plot skipped: {e})")
+    except Exception as e:
+        print(f"   ⚠️ could not summarize pathways for {marker.upper()}: {e}")
+
+
 def run_marker(marker: str) -> None:
     folder = EXPORTED_DIR / marker
     rep_fna = folder / "rep_seqs.fna"
-    # the export step names it rep_seqs.fna; fall back to dna-sequences.fasta
     if not rep_fna.exists():
         alt = folder / "dna-sequences.fasta"
         rep_fna = alt if alt.exists() else rep_fna
@@ -60,7 +97,7 @@ def run_marker(marker: str) -> None:
     out_dir = folder / "picrust2_output"
 
     if not rep_fna.exists() or not biom.exists():
-        print(f"⏩ Skipping {marker.upper()}: need {rep_fna.name} and {biom.name} "
+        print(f"⏩ Skipping {marker.upper()}: need {rep_fna.name} and feature-table.biom "
               f"in {folder} (run the export step first).")
         return
 
@@ -81,8 +118,7 @@ def run_marker(marker: str) -> None:
     try:
         subprocess.run(cmd, check=True)
         print(f"✅ PICRUSt2 finished for {marker.upper()} -> {out_dir}")
-        print("   Key outputs: KO_metagenome_out/, EC_metagenome_out/, "
-              "pathways_out/ (all *.tsv.gz).")
+        summarize_pathways(out_dir, marker)
     except subprocess.CalledProcessError as e:
         print(f"❌ PICRUSt2 failed for {marker.upper()} (exit {e.returncode}).")
 
@@ -93,9 +129,8 @@ def main() -> None:
         print("   PICRUSt2 must be installed in an active conda env:")
         print("     conda create -n picrust2 -c bioconda -c conda-forge picrust2")
         print("     conda activate picrust2")
-        print("   Then re-run this step from that environment.")
-        # Exit 0 so the pipeline runner treats this as 'skipped', not 'crashed'.
-        return
+        print("   Then re-run:  python scripts/run_picrust2.py")
+        return  # exit 0 -> pipeline treats this as 'skipped', not 'crashed'
 
     for marker in [m.strip() for m in MARKERS if m.strip()]:
         run_marker(marker)
