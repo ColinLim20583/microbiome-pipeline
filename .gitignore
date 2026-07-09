@@ -33,10 +33,15 @@ uploads/
 # QIIME2 artifacts, classifiers and pipeline outputs (large/binary)
 # ------------------------------------------------------------------ #
 data/
+results/
 *.qza
 *.qzv
 *.biom
 classifiers/*.qza
+
+# Generated QC / report artifacts
+*_fastqc.html
+*_fastqc.zip
 
 # ------------------------------------------------------------------ #
 # Vendored external tool: picrust2 ships its OWN git repo.
