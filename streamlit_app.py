@@ -29,7 +29,18 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import config as cfg  # noqa: E402
 
-st.set_page_config(page_title="Peanut Microbiome Pipeline", page_icon="🥜", layout="wide")
+st.set_page_config(
+    page_title="Microbiome Pipeline",
+    page_icon="🧬",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        "Get Help": "https://github.com/ColinLim20583/microbiome-pipeline",
+        "Report a bug": "https://github.com/ColinLim20583/microbiome-pipeline/issues",
+        "About": "Microbiome Pipeline — evidence-based amplicon analysis "
+                 "(interaction networks + taxon insights).",
+    },
+)
 
 # --------------------------------------------------------------------------- #
 # Helpers
@@ -62,16 +73,31 @@ def run_script(script_name: str) -> tuple[int, str]:
 # --------------------------------------------------------------------------- #
 # Sidebar - dynamic configuration
 # --------------------------------------------------------------------------- #
-st.sidebar.title("🥜 Pipeline")
+st.sidebar.title("🧬 Microbiome Pipeline")
+st.sidebar.caption("Evidence-based amplicon analysis")
 page = st.sidebar.radio(
-    "Section",
-    ["1 - Upload & metadata", "2 - Run pipeline", "3 - Results",
-     "4 - Interaction network", "5 - Taxon insights", "About"],
+    "Navigate",
+    ["🏠 Home",
+     "1 · Upload & metadata",
+     "2 · Run pipeline",
+     "3 · Results",
+     "4 · Interaction network",
+     "5 · Taxon insights"],
+    label_visibility="collapsed",
 )
 
 st.sidebar.markdown("---")
 st.sidebar.caption("Markers (from config)")
-st.sidebar.write(", ".join(cfg.MARKERS))
+st.sidebar.write(", ".join(m.upper() for m in cfg.MARKERS))
+st.sidebar.markdown("---")
+st.sidebar.markdown(
+    "<div style='font-size:0.8rem;color:#888;'>"
+    "Analysis pages (Interaction network, Taxon insights) run in-browser. "
+    "QIIME2 processing runs locally.<br><br>"
+    "<a href='https://github.com/ColinLim20583/microbiome-pipeline' target='_blank'>"
+    "⭐ View on GitHub</a></div>",
+    unsafe_allow_html=True,
+)
 
 ensure_dirs()
 
@@ -429,46 +455,77 @@ elif page.startswith("5"):
 # ABOUT
 # =========================================================================== #
 else:
-    st.title("🥜 Peanut Microbiome Platform")
+    # ---- Hero ----
     st.markdown(
-        """
-### From raw reads to evidence-based microbial insights
-
-A configurable **16S / ITS / 18S amplicon platform** that takes microbiome
-sequencing data through QIIME2 + DADA2 + PICRUSt2, and turns the result into
-**evidence-based biological insight**:
-
-- a **microbial interaction network** (who associates with whom), and
-- **taxon insights** (why a microbe is high/low, what it means, what to do),
-
-with every claim backed by published literature.
-
-**What makes it different**
-- **Evidence-based, not just descriptive.** Interactions and abundance patterns
-  are annotated with drivers, interventions and citations.
-- **Fully dynamic, zero hard-coding.** Markers, primers, DADA2 parameters,
-  classifiers, pipeline steps and thresholds all live in `config.py`.
-- **Reproducible & transparent.** Every result surfaces the underlying numbers
-  and the methods/references used.
-
-**How to use this app**
-1. **Upload & metadata** — add paired-end FASTQ per marker and sample metadata.
-2. **Run pipeline** — QIIME2 steps *(requires a local QIIME2 environment)*.
-3. **Results** — browse ASV tables and figures.
-4. **Interaction network** — evidence-annotated co-occurrence network.
-5. **Taxon insights** — why taxa are high/low, causes, solutions, citations.
-        """
+        "<h1 style='margin-bottom:0'>🧬 Microbiome Pipeline</h1>"
+        "<p style='font-size:1.15rem;color:#555;margin-top:0.2rem'>"
+        "From raw amplicon reads to <b>evidence-based</b> microbial insight — "
+        "interaction networks and taxon-level drivers, every claim backed by "
+        "published literature.</p>",
+        unsafe_allow_html=True,
     )
+
+    # ---- Headline metrics ----
+    import json as _json
+    def _count(fname, key):
+        try:
+            with open(cfg.REFERENCE_DIR / fname, encoding="utf-8") as fh:
+                return len(_json.load(fh).get(key, []))
+        except Exception:
+            return "—"
+    n_int = _count("microbial_interactions.json", "interactions")
+    n_tax = _count("taxon_insights.json", "taxa")
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Amplicon markers", len(cfg.MARKERS))
+    m2.metric("Pipeline steps", len(cfg.get("pipeline_steps")))
+    m3.metric("Curated interactions", n_int)
+    m4.metric("Taxa in knowledge base", n_tax)
+
+    st.markdown("---")
+
+    # ---- Feature cards ----
+    c1, c2 = st.columns(2)
+    with c1:
+        st.subheader("🕸️ Interaction network")
+        st.markdown(
+            "Compositionally-aware (CLR) co-occurrence network with p-values, "
+            "**FDR control** and effect-size thresholds. Each edge is "
+            "cross-referenced to the literature and labelled *consistent*, "
+            "*discordant* or *novel*."
+        )
+    with c2:
+        st.subheader("🔎 Taxon insights")
+        st.markdown(
+            "For every taxon: **why it's high or low** (pH, salinity, nitrogen, "
+            "organic carbon…), what it **means**, candidate **interventions**, "
+            "and **study citations**."
+        )
+
+    st.markdown("---")
+
+    st.markdown(
+        "#### How it works\n"
+        "1. **Upload & metadata** — paired-end FASTQ per marker + sample metadata\n"
+        "2. **Run pipeline** — QIIME2 → DADA2 → taxonomy → diversity → PICRUSt2 *(local)*\n"
+        "3. **Results** — ASV tables and figures\n"
+        "4. **Interaction network** — evidence-annotated co-occurrence network\n"
+        "5. **Taxon insights** — drivers, interventions and citations per taxon"
+    )
+
     st.info(
-        "☁️ **Hosted demo note:** the QIIME2 processing steps need a local "
-        "bioinformatics environment and won't run on the cloud. The **Interaction "
-        "Network**, **Taxon Insights** and **Results** pages run fully online — "
-        "upload an ASV table to try them."
+        "☁️ **Try it now:** the **Interaction network** and **Taxon insights** "
+        "pages run fully in the browser — open one from the sidebar and upload an "
+        "ASV table (`.xlsx` / `.csv`). The QIIME2 processing steps require a local "
+        "bioinformatics environment."
     )
-    st.subheader("Current configuration")
-    st.json({
-        "markers": cfg.MARKERS,
-        "network": cfg.NETWORK,
-        "classifiers_found": {m: (str(cfg.discover_classifier(m)) if cfg.discover_classifier(m) else None)
-                              for m in cfg.MARKERS},
-    })
+
+    with st.expander("Configuration & system status"):
+        st.json({
+            "markers": cfg.MARKERS,
+            "network_thresholds": cfg.NETWORK,
+            "classifiers_found": {m: (str(cfg.discover_classifier(m)) if cfg.discover_classifier(m) else None)
+                                  for m in cfg.MARKERS},
+        })
+    st.caption("Open-source · configurable · reproducible — "
+               "[github.com/ColinLim20583/microbiome-pipeline]"
+               "(https://github.com/ColinLim20583/microbiome-pipeline)")
