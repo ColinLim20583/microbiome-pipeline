@@ -147,13 +147,43 @@ if page.startswith("1"):
 # PAGE 2 - Run pipeline
 # =========================================================================== #
 elif page.startswith("2"):
-    st.title("Run the QIIME2 pipeline")
+    import shutil as _shutil
+    st.title("Run the pipeline")
     steps = cfg.get("pipeline_steps")
-    st.write(f"{len(steps)} steps, defined in `config.py -> pipeline_steps`. "
-             "Requires the `qiime2` conda environment to be active for the QIIME steps.")
+
+    # Environment check: the QIIME2 steps rely on conda bioinformatics tools that
+    # exist only in a local install, never on a lightweight cloud host.
+    required_tools = ["qiime", "cutadapt", "fastqc"]
+    missing = [t for t in required_tools if _shutil.which(t) is None]
+
+    if missing:
+        st.warning(
+            "🖥️ **This page runs the heavy QIIME2 / DADA2 / PICRUSt2 processing, "
+            "which needs a local bioinformatics environment — it can't run on the "
+            "hosted (cloud) app.**"
+        )
+        st.markdown(
+            f"Missing tools in this environment: `{', '.join(missing)}`.\n\n"
+            "**How the workflow is meant to run:**\n"
+            "1. Install the environments locally "
+            "(`conda env create -f environment.yml`, plus a QIIME2 amplicon env).\n"
+            "2. Run this pipeline **on your machine** to produce "
+            "`data/exported/asv_tables_combined.xlsx`.\n"
+            "3. Come back here (or on the cloud) and use **Interaction network** "
+            "and **Taxon insights** — those run fully in the browser on your ASV table.\n\n"
+            "This local-processing / cloud-analysis split is by design: sequence "
+            "processing is memory-heavy and tool-heavy; the evidence-based analysis "
+            "is lightweight and shareable."
+        )
+        st.info("👉 Jump to **4 · Interaction network** or **5 · Taxon insights** in "
+                "the sidebar and upload an ASV table to see the platform in action.")
+        st.stop()
+
+    # --- local environment: full pipeline runner ---
+    st.write(f"{len(steps)} steps, defined in `config.py → pipeline_steps`.")
 
     with st.expander("Adjust DADA2 truncation lengths before running"):
-        st.caption("These feed straight into config at run time via environment - tune from your demux.qzv quality plots.")
+        st.caption("Tune from your demux.qzv quality plots.")
         st.json(cfg.DADA2)
 
     selected = st.multiselect(
@@ -452,10 +482,9 @@ elif page.startswith("5"):
         st.caption("⚠️ " + res.get("disclaimer", ""))
 
 # =========================================================================== #
-# ABOUT
+# HOME
 # =========================================================================== #
 else:
-    # ---- Hero ----
     st.markdown(
         "<h1 style='margin-bottom:0'>🧬 Microbiome Pipeline</h1>"
         "<p style='font-size:1.15rem;color:#555;margin-top:0.2rem'>"
@@ -465,7 +494,6 @@ else:
         unsafe_allow_html=True,
     )
 
-    # ---- Headline metrics ----
     import json as _json
     def _count(fname, key):
         try:
@@ -483,7 +511,6 @@ else:
 
     st.markdown("---")
 
-    # ---- Feature cards ----
     c1, c2 = st.columns(2)
     with c1:
         st.subheader("🕸️ Interaction network")
@@ -515,7 +542,7 @@ else:
     st.info(
         "☁️ **Try it now:** the **Interaction network** and **Taxon insights** "
         "pages run fully in the browser — open one from the sidebar and upload an "
-        "ASV table (`.xlsx` / `.csv`). The QIIME2 processing steps require a local "
+        "ASV table (.xlsx / .csv). The QIIME2 processing steps require a local "
         "bioinformatics environment."
     )
 
@@ -527,5 +554,4 @@ else:
                                   for m in cfg.MARKERS},
         })
     st.caption("Open-source · configurable · reproducible — "
-               "[github.com/ColinLim20583/microbiome-pipeline]"
-               "(https://github.com/ColinLim20583/microbiome-pipeline)")
+               "github.com/ColinLim20583/microbiome-pipeline")
